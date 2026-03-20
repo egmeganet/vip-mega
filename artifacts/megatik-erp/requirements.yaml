@@ -1,0 +1,20 @@
+packages:
+  "recharts": "Dashboard analytics charts and data visualization"
+  "react-hook-form": "Robust form state management"
+  "@hookform/resolvers": "Zod validation for forms"
+  "zod": "Schema definition and validation"
+  "date-fns": "Date formatting and manipulation"
+  "framer-motion": "UI animations and transitions"
+
+images:
+  - path: "artifacts/megatik-erp/public/images/login-bg.png"
+    description: "Abstract elegant dark gradient mesh background in deep indigo and slate tones, highly professional and modern enterprise software aesthetic"
+    aspect_ratio: "16:9"
+  - path: "artifacts/megatik-erp/public/images/logo-icon.png"
+    description: "Minimalist geometric logo mark representing connectivity and data in blue and cyan, transparent background"
+    aspect_ratio: "1:1"
+
+notes:
+  - "Using generated hooks from @workspace/api-client-react for TanStack Query data fetching."
+  - "RTL support requires robust usage of Tailwind logical properties (ms-, me-, ps-, pe-, border-s-)."
+  - "Consolidated related domains into tabbed hub pages (Finance, Packages, Settings) for optimal enterprise UX."

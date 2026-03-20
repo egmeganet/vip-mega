@@ -15,82 +15,110 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
 - **API codegen**: Orval (from OpenAPI spec)
 - **Build**: esbuild (CJS bundle)
+- **Auth**: JWT via `jsonwebtoken` + `bcryptjs`
+
+## Applications
+
+### MEGA-TIK Finance & Subscribers ERP (`artifacts/megatik-erp`)
+
+Full-featured ERP system for managing internet service provider (ISP) subscribers (PPPoE/Hotspot).
+
+**Features:**
+- Subscriber management (create/edit/delete, filter by status/area/type)
+- Plans management (internet packages)
+- Extra quota packages
+- Wallet deposits and withdrawals
+- Subscription renewal (cash, Vodafone Cash, bank transfer, wallet, deferred/debt)
+- Extra GB quota addition
+- Debt tracking (partial/full payments)
+- Financial ledger (credit/debit entries)
+- Dashboard with KPI cards and charts
+- Arabic (RTL) / English (LTR) language toggle
+- Role-based access: admin, supervisor, accountant, collector
+
+**Default credentials:**
+- Admin: admin@megatik.com / password
+- Supervisor: supervisor@megatik.com / password
+- Accountant: accountant@megatik.com / password
+- Collector: collector@megatik.com / password
 
 ## Structure
 
 ```text
 artifacts-monorepo/
 ├── artifacts/              # Deployable applications
-│   └── api-server/         # Express API server
+│   ├── api-server/         # Express API server
+│   └── megatik-erp/        # MEGA-TIK ERP React frontend
 ├── lib/                    # Shared libraries
 │   ├── api-spec/           # OpenAPI spec + Orval codegen config
 │   ├── api-client-react/   # Generated React Query hooks
 │   ├── api-zod/            # Generated Zod schemas from OpenAPI
 │   └── db/                 # Drizzle ORM schema + DB connection
-├── scripts/                # Utility scripts (single workspace package)
-│   └── src/                # Individual .ts scripts, run via `pnpm --filter @workspace/scripts run <script>`
-├── pnpm-workspace.yaml     # pnpm workspace (artifacts/*, lib/*, lib/integrations/*, scripts)
-├── tsconfig.base.json      # Shared TS options (composite, bundler resolution, es2022)
+├── scripts/                # Utility scripts
+│   └── src/seed.ts         # Database seeder
+├── pnpm-workspace.yaml     # pnpm workspace
+├── tsconfig.base.json      # Shared TS options
 ├── tsconfig.json           # Root TS project references
-└── package.json            # Root package with hoisted devDeps
+└── package.json            # Root package
 ```
+
+## Database Schema
+
+Tables:
+- `users` - System users with roles
+- `areas` - Geographic areas
+- `plans` - Internet subscription plans
+- `extra_quota_packages` - Additional GB packages
+- `subscribers` - Internet subscribers
+- `subscriber_services` - Active subscriber services/plans
+- `renewals` - Subscription renewal records
+- `subscriber_extra_quotas` - Extra GB additions
+- `wallet_transactions` - Wallet credit/debit history
+- `financial_entries` - Financial ledger (double-entry)
+- `debts` - Outstanding debts from deferred renewals
+- `debt_payments` - Debt payment records
+- `price_tiers` - Tiered GB pricing
+- `settings` - System configuration
+
+## API Routes
+
+Base path: `/api`
+
+- `POST /auth/login` - Login with email/password → JWT
+- `GET /auth/me` - Get current user
+- `GET /dashboard/stats` - KPI statistics
+- `GET /dashboard/charts` - Chart data
+- `GET/POST /areas` - Areas CRUD
+- `GET/POST /plans` - Plans CRUD
+- `GET/POST /extra-quota-packages` - Extra quota packages CRUD
+- `GET/POST /subscribers` - Subscribers list/create
+- `POST /subscribers/:id/deposit` - Wallet deposit
+- `POST /subscribers/:id/renew` - Renew subscription
+- `POST /subscribers/:id/add-extra-quota` - Add extra quota
+- `GET /renewals` - Renewals list
+- `GET /wallet-transactions` - Wallet transactions
+- `GET /debts` - Debts list
+- `POST /debts/:id/pay` - Pay debt
+- `GET /financial-entries` - Financial ledger
+- `GET/POST /price-tiers` - Price tiers CRUD
+- `POST /pricing/calculate` - Calculate GB for given amount
+- `GET/POST /users` - User management
+- `GET/PUT /settings` - System settings
 
 ## TypeScript & Composite Projects
 
-Every package extends `tsconfig.base.json` which sets `composite: true`. The root `tsconfig.json` lists all packages as project references. This means:
-
-- **Always typecheck from the root** — run `pnpm run typecheck` (which runs `tsc --build --emitDeclarationOnly`). This builds the full dependency graph so that cross-package imports resolve correctly. Running `tsc` inside a single package will fail if its dependencies haven't been built yet.
-- **`emitDeclarationOnly`** — we only emit `.d.ts` files during typecheck; actual JS bundling is handled by esbuild/tsx/vite...etc, not `tsc`.
-- **Project references** — when package A depends on package B, A's `tsconfig.json` must list B in its `references` array. `tsc --build` uses this to determine build order and skip up-to-date packages.
+Every package extends `tsconfig.base.json`. Run `pnpm run typecheck` for full typecheck.
 
 ## Root Scripts
 
-- `pnpm run build` — runs `typecheck` first, then recursively runs `build` in all packages that define it
-- `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly` using project references
+- `pnpm run build` — runs `typecheck` first, then recursively runs `build` in all packages
+- `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly`
+- `pnpm --filter @workspace/scripts run seed` — seed the database
 
-## Packages
+## Seed & Development
 
-### `artifacts/api-server` (`@workspace/api-server`)
+Run database seed: `pnpm --filter @workspace/scripts run seed`
 
-Express 5 API server. Routes live in `src/routes/` and use `@workspace/api-zod` for request and response validation and `@workspace/db` for persistence.
+Re-run codegen after OpenAPI changes: `pnpm --filter @workspace/api-spec run codegen`
 
-- Entry: `src/index.ts` — reads `PORT`, starts Express
-- App setup: `src/app.ts` — mounts CORS, JSON/urlencoded parsing, routes at `/api`
-- Routes: `src/routes/index.ts` mounts sub-routers; `src/routes/health.ts` exposes `GET /health` (full path: `/api/health`)
-- Depends on: `@workspace/db`, `@workspace/api-zod`
-- `pnpm --filter @workspace/api-server run dev` — run the dev server
-- `pnpm --filter @workspace/api-server run build` — production esbuild bundle (`dist/index.cjs`)
-- Build bundles an allowlist of deps (express, cors, pg, drizzle-orm, zod, etc.) and externalizes the rest
-
-### `lib/db` (`@workspace/db`)
-
-Database layer using Drizzle ORM with PostgreSQL. Exports a Drizzle client instance and schema models.
-
-- `src/index.ts` — creates a `Pool` + Drizzle instance, exports schema
-- `src/schema/index.ts` — barrel re-export of all models
-- `src/schema/<modelname>.ts` — table definitions with `drizzle-zod` insert schemas (no models definitions exist right now)
-- `drizzle.config.ts` — Drizzle Kit config (requires `DATABASE_URL`, automatically provided by Replit)
-- Exports: `.` (pool, db, schema), `./schema` (schema only)
-
-Production migrations are handled by Replit when publishing. In development, we just use `pnpm --filter @workspace/db run push`, and we fallback to `pnpm --filter @workspace/db run push-force`.
-
-### `lib/api-spec` (`@workspace/api-spec`)
-
-Owns the OpenAPI 3.1 spec (`openapi.yaml`) and the Orval config (`orval.config.ts`). Running codegen produces output into two sibling packages:
-
-1. `lib/api-client-react/src/generated/` — React Query hooks + fetch client
-2. `lib/api-zod/src/generated/` — Zod schemas
-
-Run codegen: `pnpm --filter @workspace/api-spec run codegen`
-
-### `lib/api-zod` (`@workspace/api-zod`)
-
-Generated Zod schemas from the OpenAPI spec (e.g. `HealthCheckResponse`). Used by `api-server` for response validation.
-
-### `lib/api-client-react` (`@workspace/api-client-react`)
-
-Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHealthCheck`, `healthCheck`).
-
-### `scripts` (`@workspace/scripts`)
-
-Utility scripts package. Each script is a `.ts` file in `src/` with a corresponding npm script in `package.json`. Run scripts via `pnpm --filter @workspace/scripts run <script>`. Scripts can import any workspace package (e.g., `@workspace/db`) by adding it as a dependency in `scripts/package.json`.
+Push schema changes to DB: `pnpm --filter @workspace/db run push`

@@ -1,0 +1,271 @@
+برومت بناء مشروع MEGA-TIK Finance & Subscribers ERP باستخدام Laravel + Filament
+
+تعليمات للوكيل الذكي (ChatGPT أو مساعد برمجة)
+
+أنت مطور Laravel خبير، مطلوب منك بناء نظام ERP متكامل لإدارة مشتركي الإنترنت (PPPoE/Hotspot) وفق المواصفات التالية. يجب أن يكون المشروع كاملاً وجاهزاً للتشغيل بعد اتباع خطوات التثبيت.
+
+---
+
+1. وصف المشروع
+
+الاسم: MEGA-TIK Finance & Subscribers ERP
+الغرض: نظام لإدارة مشتركي الإنترنت، الباقات، الإيداعات، التجديد، إضافة جيجات إضافية، الديون، والتقارير المالية.
+اللغة الأساسية: العربية (مع دعم الإنجليزية و RTL).
+المستخدمون: مدير عام، مشرف، محاسب، موظف تحصيل.
+
+الميزات الرئيسية
+
+· إدارة المشتركين (CRUD، فلاتر، بحث).
+· إدارة الباقات (plans) والباقات الإضافية (extra quota packages).
+· إيداع رصيد للمشتركين (طرق دفع متعددة).
+· تجديد الاشتراك (مدفوع أو آجل/دين) مع إمكانية رفع صورة دفع فودافون كاش واستخراج المبلغ تلقائياً (OCR).
+· إضافة جيجات إضافية مع تسعير متدرج (price tiers).
+· إدارة الديون (تسجيل، سداد جزئي/كلي).
+· دفتر أستاذ مالي (financial entries) لكل حركة.
+· سجل نشاط (audit log).
+· تقارير متعددة مع تصدير PDF/Excel.
+· لوحة تحكم مدير مع مؤشرات ورسوم بيانية.
+· نظام صلاحيات وأدوار (RBAC).
+
+---
+
+2. المتطلبات التقنية
+
+· Laravel 12 (PHP 8.3)
+· MySQL 8 (أو PostgreSQL)
+· Filament v3 (لوحة التحكم)
+· Livewire v3 (للمكونات التفاعلية)
+· Tailwind CSS v4 (مع دعم RTL)
+· الحزم الإضافية (يجب تثبيتها):
+  · spatie/laravel-permission
+  · spatie/laravel-activitylog
+  · spatie/laravel-medialibrary
+  · spatie/laravel-translatable
+  · spatie/laravel-backup
+  · chenjia404/laravel-page-speed
+  · enlightn/enlightn
+  · barryvdh/laravel-dompdf
+  · maatwebsite/excel
+  · thiagoalessio/tesseract_ocr
+  · intervention/image
+  · filament/spatie-laravel-permission-plugin
+  · filament/spatie-laravel-activitylog-plugin
+  · filament/spatie-laravel-media-library-plugin
+  · filament/curator
+  · solution-forest/filament-firewall
+  · pxlrbt/filament-environment-indicator
+  · usernotnull/tall-toast
+  · wire-elements/modal
+
+---
+
+3. هيكل قاعدة البيانات
+
+قم بإنشاء ملفات migration وفق الجداول التالية (مع العلاقات الصحيحة):
+
+1. users (id, name, email, password, locale, timestamps)
+2. areas (id, name_ar, name_en, timestamps)
+3. subscribers (id, name_ar, name_en, phone, alternate_phone, type, status, area_id, address, wallet_balance, notes, timestamps)
+4. plans (id, name_ar, name_en, price, gigabytes, duration_days, is_active, timestamps)
+5. extra_quota_packages (id, name_ar, name_en, gigabytes, price, extends_expiry, is_active, timestamps)
+6. subscriber_services (id, subscriber_id, plan_id, start_date, expiry_date, remaining_gigabytes, status, timestamps)
+7. renewals (id, subscriber_id, plan_id, user_id, amount, payment_type, screenshot_path, detected_amount, renewal_date, new_expiry_date, notes, timestamps)
+8. subscriber_extra_quotas (id, subscriber_id, extra_package_id, user_id, gigabytes, price, payment_type, screenshot_path, detected_amount, extends_expiry, notes, timestamps)
+9. wallet_transactions (id, subscriber_id, user_id, type, amount, balance_after, description, timestamps)
+10. financial_entries (id, reference_type, reference_id, subscriber_id, user_id, type, direction, amount, description, timestamps)
+11. debts (id, subscriber_id, renewal_id, extra_quota_id, amount, paid_amount, status, due_date, notes, timestamps)
+12. debt_payments (id, debt_id, user_id, amount, payment_method, screenshot_path, notes, timestamps)
+13. price_tiers (id, min_quantity, max_quantity, price_per_gb, is_active, timestamps)
+14. settings (id, key, value, timestamps)
+
+(لا تنس جداول Spatie: model_has_roles, role_has_permissions, activity_log, media)
+
+---
+
+4. متطلبات إضافية
+
+· اللغة: يجب أن تكون العربية هي اللغة الافتراضية، مع إمكانية التبديل للإنجليزية. استخدم Laravel localization مع ملفات ar.json و en.json. يجب أن يدعم Filament RTL تلقائياً عند اختيار العربية.
+· OCR: استخدم Tesseract لاستخراج الأرقام من الصور المرفوعة (يجب تثبيته على السيرفر). قم بإنشاء OcrService الذي يعالج الصورة ويعيد المبلغ.
+· التسعير المتدرج: أنشئ PricingService يأخذ المبلغ ويعيد أفضل كمية جيجا بناءً على price_tiers.
+· الصلاحيات: حدد أدوار (مدير عام، مشرف، محاسب، موظف تحصيل) مع صلاحيات مناسبة لكل Resource.
+· التقارير: استخدم Filament's widgets للوحة الرئيسية، وأنشئ صفحة تقارير مخصصة (Custom Page) تحتوي على فلاتر وجداول ورسوم بيانية (يمكن استخدام Chart.js أو ApexCharts).
+
+---
+
+5. هيكل المشروع المتوقع
+
+يجب أن يكون الهيكل كالتالي (مع الالتزام بمسميات Laravel القياسية):
+
+```
+app/
+├── Filament/
+│   ├── Resources/
+│   │   ├── SubscriberResource.php
+│   │   ├── PlanResource.php
+│   │   ├── ExtraQuotaPackageResource.php
+│   │   ├── RenewalResource.php
+│   │   ├── SubscriberExtraQuotaResource.php
+│   │   ├── WalletTransactionResource.php
+│   │   ├── FinancialEntryResource.php
+│   │   ├── DebtResource.php
+│   │   ├── DebtPaymentResource.php
+│   │   ├── PriceTierResource.php
+│   │   ├── AreaResource.php
+│   │   ├── UserResource.php
+│   │   └── RoleResource.php (باستخدام Filament Shield أو plugin)
+│   └── Pages/
+│       ├── RenewSubscription.php (Livewire component)
+│       └── AddExtraQuota.php (Livewire component)
+├── Http/
+│   └── Livewire/
+│       ├── RenewWithScreenshot.php
+│       └── ExtraQuotaWithScreenshot.php
+├── Models/
+│   ├── User.php
+│   ├── Subscriber.php
+│   ├── Plan.php
+│   ├── ExtraQuotaPackage.php
+│   ├── SubscriberService.php
+│   ├── Renewal.php
+│   ├── SubscriberExtraQuota.php
+│   ├── WalletTransaction.php
+│   ├── FinancialEntry.php
+│   ├── Debt.php
+│   ├── DebtPayment.php
+│   ├── PriceTier.php
+│   ├── Area.php
+│   └── Setting.php
+├── Services/
+│   ├── WalletService.php
+│   ├── RenewalService.php
+│   ├── ExtraQuotaService.php
+│   ├── DebtService.php
+│   ├── OcrService.php
+│   ├── PricingService.php
+│   └── FinancialEntryService.php
+├── Policies/
+│   ├── SubscriberPolicy.php
+│   └── ...
+└── Console/
+    └── Kernel.php (لجدولة المهام)
+database/
+├── migrations/
+├── seeders/
+│   ├── RolesAndPermissionsSeeder.php
+│   ├── PlansSeeder.php
+│   ├── PriceTiersSeeder.php
+│   └── SettingsSeeder.php
+lang/
+├── ar/
+└── en/
+resources/
+├── css/
+│   └── filament/
+│       └── admin/
+│           └── theme.css (مع دعم RTL)
+└── views/
+    └── livewire/
+routes/
+├── web.php
+└── api.php (اختياري)
+tests/
+├── Unit/
+└── Feature/
+```
+
+---
+
+6. خطوات التنفيذ (ما يجب أن يفعله الوكيل)
+
+1. كتابة ملفات الـ migrations (جميع الجداول المذكورة).
+2. كتابة الـ Models مع العلاقات (hasMany, belongsTo) و traits المطلوبة (Translatable, HasMedia, LogsActivity).
+3. كتابة Seeders لإنشاء الأدوار والصلاحيات، وبعض بيانات الباقات وشرائح التسعير الافتراضية.
+4. إنشاء Resources في Filament لكل موديل رئيسي مع:
+   · تعريف الحقول (Forms) وعرض الأعمدة (Tables).
+   · إضافة الفلاتر والبحث.
+   · إضافة Relation Managers للعلاقات (مثل عرض خدمات المشترك داخل SubscriberResource).
+   · إضافة Actions المخصصة (مثل "إيداع" في SubscriberResource).
+5. إنشاء صفحات Livewire مخصصة:
+   · RenewWithScreenshot (تحتوي على معالج رفع الصورة، استدعاء OCR، اقتراح الباقة، ثم تنفيذ التجديد).
+   · AddExtraQuotaWithScreenshot (مماثلة).
+6. كتابة Service Classes:
+   · OcrService (باستخدام Tesseract).
+   · PricingService (لحساب أفضل كمية جيجا حسب المبلغ).
+   · RenewalService (ينشئ سجل تجديد، يحدث الخدمة، ينشئ حركة مالية، يتعامل مع الدين).
+   · ExtraQuotaService (ينشئ إضافة جيجات، يحدث الرصيد، الخ).
+   · WalletService (يدير عمليات المحفظة).
+   · DebtService (يدير الديون والسداد).
+   · FinancialEntryService (ينشئ قيود دفتر الأستاذ).
+7. تخصيص لوحة التحكم:
+   · إضافة Widgets (إجمالي التحصيل اليومي، الديون، إلخ).
+   · إنشاء صفحة تقارير تحتوي على فلاتر وجداول ورسوم بيانية.
+   · إضافة أزرار تصدير PDF/Excel.
+8. إعداد اللغة:
+   · إنشاء ملفات ar.json و en.json مع جميع النصوص المستخدمة.
+   · إضافة Middleware لتبديل اللغة.
+   · تكوين Filament لدعم RTL (باستخدام Filament::getCurrentPanel()->direction()) وتغيير الـ CSS.
+9. إعداد الصلاحيات:
+   · ربط Filament مع Spatie باستخدام plugin.
+   · تحديد الصلاحيات لكل Resource وعملية (view, create, update, delete).
+10. كتابة Policies لحماية الموديلات.
+11. إعداد المهام المجدولة (مثل تحديث حالة المشتركين منتهية الصلاحية، إشعارات الديون).
+12. كتابة الاختبارات الأساسية للـ Services (اختياري ولكن يفضل).
+13. إعداد ملفات البيئة (.env.example) وتعليمات التثبيت في README.md.
+
+---
+
+7. المخرجات المطلوبة
+
+· ملفات كاملة لكل جزء من المشروع (Controllers, Models, Migrations, Seeders, Resources, Services, Policies, Livewire Components, Views, Language files, Routes, Configurations).
+· ملف README.md بالعربية (ويفضل الإنجليزية) يشرح:
+  · كيفية تثبيت المشروع (clone, composer install, npm install, copy .env, generate key, migrate, seed).
+  · متطلبات السيرفر (PHP, MySQL, Tesseract, إلخ).
+  · كيفية تشغيل السيرفر المحلي.
+  · بيانات الدخول الافتراضية (admin@example.com / password).
+· ملف .env.example يحتوي على جميع المتغيرات المطلوبة.
+· ملف package.json مع التبعيات الأمامية (Tailwind, Alpine, إلخ).
+· ملف composer.json مع الحزم المذكورة.
+
+---
+
+8. ملاحظات مهمة للوكيل
+
+· تأكد من أن جميع الكودات متوافقة مع معايير Laravel (PSR-12).
+· استخدم التسمية الإنجليزية للمتغيرات والدوال، مع توفير الترجمة في ملفات اللغة.
+· احرص على وجود علاقات Eloquent صحيحة (مع foreignId و constrained).
+· أضف $casts للموديلات عند الحاجة (مثل price كـ decimal).
+· في OcrService، استخدم thiagoalessio/tesseract_ocr مع تحسين الصورة باستخدام Intervention Image.
+· في PricingService، اكتب منطق يبحث عن أفضل كمية ممكنة بالمبلغ مع الأخذ بعين الاعتبار الشرائح (min_quantity, max_quantity, price_per_gb).
+· عند إنشاء Renewal، تأكد من تحديث subscriber_services الحالية (إنشاء خدمة جديدة أو تمديد الحالية حسب السياسة).
+· عند إضافة جيجات إضافية، إذا كان extends_expiry = true، قم بتمديد تاريخ انتهاء الخدمة الحالية.
+· استخدم activitylog لتسجيل الأحداث الهامة (إضافة، تعديل، حذف) على الموديلات.
+· قم بتضمين spatie/laravel-backup مع إعدادات النسخ الاحتياطي اليومي.
+
+---
+
+9. تعليمات إضافية لضمان الجودة
+
+· اجعل الكود قابلاً للقراءة وأضف تعليقات للوظائف المعقدة.
+· استخدم Form Requests للتحقق من صحة البيانات في الـ Controllers (إذا استخدمت أي Controllers خارج Filament).
+· تجنب كتابة منطق الأعمال داخل الـ Resources؛ استخدم Services.
+· قم بتضمين اختبارات بسيطة لـ PricingService و OcrService.
+
+---
+
+10. التسليم النهائي
+
+عند الانتهاء، يجب أن يكون لدينا مشروع Laravel كامل يمكن تشغيله باتباع الخطوات في README. يجب أن تكون جميع الميزات المذكورة قيد العمل، مع واجهة مستخدم عربية جميلة باستخدام Filament.
+
+الآن، ابدأ بكتابة الكود حسب الترتيب التالي (أو قدم كل الملفات دفعة واحدة):
+
+1. ملفات الـ migrations
+2. الـ Models
+3. الـ Seeders
+4. إعدادات Filament والـ Resources
+5. الـ Services
+6. مكونات Livewire
+7. ملفات اللغة والإعدادات
+8. الاختبارات (اختياري)
+9. ملفات البيئة والتعليمات
+
+يرجى إخراج الملفات كاملة مع محتواها في رد واحد أو مقسم حسب الحاجة، على أن تكون جاهزة للنسخ واللصق.

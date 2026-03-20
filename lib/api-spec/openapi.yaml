@@ -1,22 +1,47 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: MEGA-TIK Finance & Subscribers ERP API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: dashboard
+    description: Dashboard analytics
+  - name: subscribers
+    description: Subscriber management
+  - name: plans
+    description: Internet plans
+  - name: areas
+    description: Geographic areas
+  - name: extra-quotas
+    description: Extra quota packages
+  - name: renewals
+    description: Subscription renewals
+  - name: wallet
+    description: Wallet transactions
+  - name: debts
+    description: Debt management
+  - name: financial
+    description: Financial entries
+  - name: price-tiers
+    description: Pricing tiers
+  - name: users
+    description: User management
+  - name: settings
+    description: System settings
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +49,1009 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get dashboard statistics
+      responses:
+        "200":
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /dashboard/charts:
+    get:
+      operationId: getDashboardCharts
+      tags: [dashboard]
+      summary: Get chart data
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [7d, 30d, 90d]
+          description: Time period
+      responses:
+        "200":
+          description: Chart data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChartData"
+
+  /areas:
+    get:
+      operationId: listAreas
+      tags: [areas]
+      summary: List areas
+      responses:
+        "200":
+          description: List of areas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Area"
+    post:
+      operationId: createArea
+      tags: [areas]
+      summary: Create area
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAreaRequest"
+      responses:
+        "201":
+          description: Created area
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Area"
+
+  /areas/{id}:
+    get:
+      operationId: getArea
+      tags: [areas]
+      summary: Get area
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Area
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Area"
+    put:
+      operationId: updateArea
+      tags: [areas]
+      summary: Update area
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAreaRequest"
+      responses:
+        "200":
+          description: Updated area
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Area"
+    delete:
+      operationId: deleteArea
+      tags: [areas]
+      summary: Delete area
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /plans:
+    get:
+      operationId: listPlans
+      tags: [plans]
+      summary: List plans
+      parameters:
+        - name: active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Plan"
+    post:
+      operationId: createPlan
+      tags: [plans]
+      summary: Create plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePlanRequest"
+      responses:
+        "201":
+          description: Created plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Plan"
+
+  /plans/{id}:
+    get:
+      operationId: getPlan
+      tags: [plans]
+      summary: Get plan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Plan"
+    put:
+      operationId: updatePlan
+      tags: [plans]
+      summary: Update plan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePlanRequest"
+      responses:
+        "200":
+          description: Updated plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Plan"
+    delete:
+      operationId: deletePlan
+      tags: [plans]
+      summary: Delete plan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /extra-quota-packages:
+    get:
+      operationId: listExtraQuotaPackages
+      tags: [extra-quotas]
+      summary: List extra quota packages
+      responses:
+        "200":
+          description: List of extra quota packages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ExtraQuotaPackage"
+    post:
+      operationId: createExtraQuotaPackage
+      tags: [extra-quotas]
+      summary: Create extra quota package
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateExtraQuotaPackageRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExtraQuotaPackage"
+
+  /extra-quota-packages/{id}:
+    get:
+      operationId: getExtraQuotaPackage
+      tags: [extra-quotas]
+      summary: Get extra quota package
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Extra quota package
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExtraQuotaPackage"
+    put:
+      operationId: updateExtraQuotaPackage
+      tags: [extra-quotas]
+      summary: Update extra quota package
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateExtraQuotaPackageRequest"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExtraQuotaPackage"
+    delete:
+      operationId: deleteExtraQuotaPackage
+      tags: [extra-quotas]
+      summary: Delete extra quota package
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /subscribers:
+    get:
+      operationId: listSubscribers
+      tags: [subscribers]
+      summary: List subscribers
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, suspended, expired, cancelled]
+        - name: area_id
+          in: query
+          schema:
+            type: integer
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [pppoe, hotspot]
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Paginated list of subscribers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubscriberListResponse"
+    post:
+      operationId: createSubscriber
+      tags: [subscribers]
+      summary: Create subscriber
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSubscriberRequest"
+      responses:
+        "201":
+          description: Created subscriber
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subscriber"
+
+  /subscribers/{id}:
+    get:
+      operationId: getSubscriber
+      tags: [subscribers]
+      summary: Get subscriber
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Subscriber with full details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubscriberDetail"
+    put:
+      operationId: updateSubscriber
+      tags: [subscribers]
+      summary: Update subscriber
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSubscriberRequest"
+      responses:
+        "200":
+          description: Updated subscriber
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subscriber"
+    delete:
+      operationId: deleteSubscriber
+      tags: [subscribers]
+      summary: Delete subscriber
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /subscribers/{id}/deposit:
+    post:
+      operationId: depositToWallet
+      tags: [subscribers]
+      summary: Deposit to subscriber wallet
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DepositRequest"
+      responses:
+        "200":
+          description: Wallet updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WalletTransaction"
+
+  /subscribers/{id}/renew:
+    post:
+      operationId: renewSubscription
+      tags: [subscribers]
+      summary: Renew subscription
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RenewalRequest"
+      responses:
+        "200":
+          description: Renewal created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Renewal"
+
+  /subscribers/{id}/add-extra-quota:
+    post:
+      operationId: addExtraQuota
+      tags: [subscribers]
+      summary: Add extra quota to subscriber
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddExtraQuotaRequest"
+      responses:
+        "200":
+          description: Extra quota added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubscriberExtraQuota"
+
+  /renewals:
+    get:
+      operationId: listRenewals
+      tags: [renewals]
+      summary: List renewals
+      parameters:
+        - name: subscriber_id
+          in: query
+          schema:
+            type: integer
+        - name: payment_type
+          in: query
+          schema:
+            type: string
+            enum: [cash, vodafone_cash, bank_transfer, wallet, deferred]
+        - name: from_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Paginated list of renewals
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RenewalListResponse"
+
+  /renewals/{id}:
+    get:
+      operationId: getRenewal
+      tags: [renewals]
+      summary: Get renewal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Renewal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Renewal"
+
+  /wallet-transactions:
+    get:
+      operationId: listWalletTransactions
+      tags: [wallet]
+      summary: List wallet transactions
+      parameters:
+        - name: subscriber_id
+          in: query
+          schema:
+            type: integer
+        - name: type
+          in: query
+          schema:
+            type: string
+        - name: from_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Paginated list of wallet transactions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WalletTransactionListResponse"
+
+  /debts:
+    get:
+      operationId: listDebts
+      tags: [debts]
+      summary: List debts
+      parameters:
+        - name: subscriber_id
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [unpaid, partial, paid]
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Paginated list of debts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DebtListResponse"
+
+  /debts/{id}:
+    get:
+      operationId: getDebt
+      tags: [debts]
+      summary: Get debt
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Debt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Debt"
+
+  /debts/{id}/pay:
+    post:
+      operationId: payDebt
+      tags: [debts]
+      summary: Pay debt (partial or full)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PayDebtRequest"
+      responses:
+        "200":
+          description: Debt payment recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DebtPayment"
+
+  /financial-entries:
+    get:
+      operationId: listFinancialEntries
+      tags: [financial]
+      summary: List financial entries
+      parameters:
+        - name: subscriber_id
+          in: query
+          schema:
+            type: integer
+        - name: type
+          in: query
+          schema:
+            type: string
+        - name: direction
+          in: query
+          schema:
+            type: string
+            enum: [debit, credit]
+        - name: from_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Paginated list of financial entries
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FinancialEntryListResponse"
+
+  /price-tiers:
+    get:
+      operationId: listPriceTiers
+      tags: [price-tiers]
+      summary: List price tiers
+      responses:
+        "200":
+          description: List of price tiers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PriceTier"
+    post:
+      operationId: createPriceTier
+      tags: [price-tiers]
+      summary: Create price tier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePriceTierRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PriceTier"
+
+  /price-tiers/{id}:
+    put:
+      operationId: updatePriceTier
+      tags: [price-tiers]
+      summary: Update price tier
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePriceTierRequest"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PriceTier"
+    delete:
+      operationId: deletePriceTier
+      tags: [price-tiers]
+      summary: Delete price tier
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List users
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Create user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+      responses:
+        "201":
+          description: Created user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{id}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    put:
+      operationId: updateUser
+      tags: [users]
+      summary: Update user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRequest"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    delete:
+      operationId: deleteUser
+      tags: [users]
+      summary: Delete user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /settings:
+    get:
+      operationId: listSettings
+      tags: [settings]
+      summary: List settings
+      responses:
+        "200":
+          description: Settings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Setting"
+    put:
+      operationId: updateSettings
+      tags: [settings]
+      summary: Update settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: string
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /pricing/calculate:
+    post:
+      operationId: calculatePricing
+      tags: [price-tiers]
+      summary: Calculate best GB amount for a given price
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+              required:
+                - amount
+      responses:
+        "200":
+          description: Pricing calculation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PricingCalculation"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +1062,930 @@ components:
       required:
         - status
 
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      required:
+        - error
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    LoginResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        token:
+          type: string
+      required:
+        - user
+        - token
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [admin, supervisor, accountant, collector]
+        locale:
+          type: string
+          enum: [ar, en]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - email
+        - role
+
+    CreateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        role:
+          type: string
+          enum: [admin, supervisor, accountant, collector]
+        locale:
+          type: string
+          enum: [ar, en]
+      required:
+        - name
+        - email
+        - password
+        - role
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        role:
+          type: string
+          enum: [admin, supervisor, accountant, collector]
+        locale:
+          type: string
+          enum: [ar, en]
+
+    DashboardStats:
+      type: object
+      properties:
+        totalSubscribers:
+          type: integer
+        activeSubscribers:
+          type: integer
+        expiredSubscribers:
+          type: integer
+        totalRevenueToday:
+          type: number
+        totalRevenueMonth:
+          type: number
+        totalDebts:
+          type: number
+        pendingDebts:
+          type: integer
+        renewalsToday:
+          type: integer
+        renewalsMonth:
+          type: integer
+        newSubscribersMonth:
+          type: integer
+      required:
+        - totalSubscribers
+        - activeSubscribers
+        - expiredSubscribers
+        - totalRevenueToday
+        - totalRevenueMonth
+        - totalDebts
+        - pendingDebts
+        - renewalsToday
+        - renewalsMonth
+        - newSubscribersMonth
+
+    ChartData:
+      type: object
+      properties:
+        revenueByDay:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+              amount:
+                type: number
+            required:
+              - date
+              - amount
+        renewalsByPlan:
+          type: array
+          items:
+            type: object
+            properties:
+              planName:
+                type: string
+              count:
+                type: integer
+            required:
+              - planName
+              - count
+        subscribersByStatus:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+              count:
+                type: integer
+            required:
+              - status
+              - count
+        debtsByMonth:
+          type: array
+          items:
+            type: object
+            properties:
+              month:
+                type: string
+              amount:
+                type: number
+            required:
+              - month
+              - amount
+      required:
+        - revenueByDay
+        - renewalsByPlan
+        - subscribersByStatus
+        - debtsByMonth
+
+    Area:
+      type: object
+      properties:
+        id:
+          type: integer
+        nameAr:
+          type: string
+        nameEn:
+          type: string
+        subscriberCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - nameAr
+        - nameEn
+
+    CreateAreaRequest:
+      type: object
+      properties:
+        nameAr:
+          type: string
+        nameEn:
+          type: string
+      required:
+        - nameAr
+        - nameEn
+
+    Plan:
+      type: object
+      properties:
+        id:
+          type: integer
+        nameAr:
+          type: string
+        nameEn:
+          type: string
+        price:
+          type: number
+        gigabytes:
+          type: number
+        durationDays:
+          type: integer
+        isActive:
+          type: boolean
+        subscriberCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - nameAr
+        - nameEn
+        - price
+        - gigabytes
+        - durationDays
+        - isActive
+
+    CreatePlanRequest:
+      type: object
+      properties:
+        nameAr:
+          type: string
+        nameEn:
+          type: string
+        price:
+          type: number
+        gigabytes:
+          type: number
+        durationDays:
+          type: integer
+        isActive:
+          type: boolean
+      required:
+        - nameAr
+        - nameEn
+        - price
+        - gigabytes
+        - durationDays
+
+    ExtraQuotaPackage:
+      type: object
+      properties:
+        id:
+          type: integer
+        nameAr:
+          type: string
+        nameEn:
+          type: string
+        gigabytes:
+          type: number
+        price:
+          type: number
+        extendsExpiry:
+          type: boolean
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - nameAr
+        - nameEn
+        - gigabytes
+        - price
+        - isActive
+
+    CreateExtraQuotaPackageRequest:
+      type: object
+      properties:
+        nameAr:
+          type: string
+        nameEn:
+          type: string
+        gigabytes:
+          type: number
+        price:
+          type: number
+        extendsExpiry:
+          type: boolean
+        isActive:
+          type: boolean
+      required:
+        - nameAr
+        - nameEn
+        - gigabytes
+        - price
+
+    Subscriber:
+      type: object
+      properties:
+        id:
+          type: integer
+        nameAr:
+          type: string
+        nameEn:
+          type: string
+        phone:
+          type: string
+        alternatePhone:
+          type: string
+        type:
+          type: string
+          enum: [pppoe, hotspot]
+        status:
+          type: string
+          enum: [active, suspended, expired, cancelled]
+        areaId:
+          type: integer
+        areaNameAr:
+          type: string
+        areaNameEn:
+          type: string
+        address:
+          type: string
+        walletBalance:
+          type: number
+        notes:
+          type: string
+        currentPlanId:
+          type: integer
+        currentPlanNameAr:
+          type: string
+        currentPlanNameEn:
+          type: string
+        expiryDate:
+          type: string
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - nameAr
+        - nameEn
+        - phone
+        - type
+        - status
+        - walletBalance
+
+    SubscriberDetail:
+      allOf:
+        - $ref: "#/components/schemas/Subscriber"
+        - type: object
+          properties:
+            services:
+              type: array
+              items:
+                $ref: "#/components/schemas/SubscriberService"
+            recentRenewals:
+              type: array
+              items:
+                $ref: "#/components/schemas/Renewal"
+            walletTransactions:
+              type: array
+              items:
+                $ref: "#/components/schemas/WalletTransaction"
+            debts:
+              type: array
+              items:
+                $ref: "#/components/schemas/Debt"
+
+    SubscriberService:
+      type: object
+      properties:
+        id:
+          type: integer
+        subscriberId:
+          type: integer
+        planId:
+          type: integer
+        planNameAr:
+          type: string
+        planNameEn:
+          type: string
+        startDate:
+          type: string
+          format: date
+        expiryDate:
+          type: string
+          format: date
+        remainingGigabytes:
+          type: number
+        status:
+          type: string
+          enum: [active, expired, suspended]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - subscriberId
+        - planId
+        - startDate
+        - expiryDate
+        - status
+
+    CreateSubscriberRequest:
+      type: object
+      properties:
+        nameAr:
+          type: string
+        nameEn:
+          type: string
+        phone:
+          type: string
+        alternatePhone:
+          type: string
+        type:
+          type: string
+          enum: [pppoe, hotspot]
+        areaId:
+          type: integer
+        address:
+          type: string
+        notes:
+          type: string
+        initialPlanId:
+          type: integer
+      required:
+        - nameAr
+        - nameEn
+        - phone
+        - type
+
+    SubscriberListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Subscriber"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+      required:
+        - data
+        - total
+        - page
+        - limit
+        - totalPages
+
+    DepositRequest:
+      type: object
+      properties:
+        amount:
+          type: number
+        paymentMethod:
+          type: string
+          enum: [cash, vodafone_cash, bank_transfer]
+        description:
+          type: string
+      required:
+        - amount
+        - paymentMethod
+
+    RenewalRequest:
+      type: object
+      properties:
+        planId:
+          type: integer
+        paymentType:
+          type: string
+          enum: [cash, vodafone_cash, bank_transfer, wallet, deferred]
+        amount:
+          type: number
+        notes:
+          type: string
+      required:
+        - planId
+        - paymentType
+
+    AddExtraQuotaRequest:
+      type: object
+      properties:
+        extraPackageId:
+          type: integer
+        paymentType:
+          type: string
+          enum: [cash, vodafone_cash, bank_transfer, wallet, deferred]
+        notes:
+          type: string
+      required:
+        - extraPackageId
+        - paymentType
+
+    Renewal:
+      type: object
+      properties:
+        id:
+          type: integer
+        subscriberId:
+          type: integer
+        subscriberNameAr:
+          type: string
+        subscriberNameEn:
+          type: string
+        planId:
+          type: integer
+        planNameAr:
+          type: string
+        planNameEn:
+          type: string
+        userId:
+          type: integer
+        userName:
+          type: string
+        amount:
+          type: number
+        paymentType:
+          type: string
+          enum: [cash, vodafone_cash, bank_transfer, wallet, deferred]
+        renewalDate:
+          type: string
+          format: date-time
+        newExpiryDate:
+          type: string
+          format: date
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - subscriberId
+        - planId
+        - amount
+        - paymentType
+        - renewalDate
+        - newExpiryDate
+
+    RenewalListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Renewal"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+      required:
+        - data
+        - total
+        - page
+        - limit
+        - totalPages
+
+    SubscriberExtraQuota:
+      type: object
+      properties:
+        id:
+          type: integer
+        subscriberId:
+          type: integer
+        extraPackageId:
+          type: integer
+        packageNameAr:
+          type: string
+        packageNameEn:
+          type: string
+        gigabytes:
+          type: number
+        price:
+          type: number
+        paymentType:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - subscriberId
+        - extraPackageId
+        - gigabytes
+        - price
+        - paymentType
+
+    WalletTransaction:
+      type: object
+      properties:
+        id:
+          type: integer
+        subscriberId:
+          type: integer
+        subscriberNameAr:
+          type: string
+        userId:
+          type: integer
+        userName:
+          type: string
+        type:
+          type: string
+          enum: [deposit, deduction, refund]
+        amount:
+          type: number
+        balanceAfter:
+          type: number
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - subscriberId
+        - type
+        - amount
+        - balanceAfter
+
+    WalletTransactionListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/WalletTransaction"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+      required:
+        - data
+        - total
+        - page
+        - limit
+        - totalPages
+
+    Debt:
+      type: object
+      properties:
+        id:
+          type: integer
+        subscriberId:
+          type: integer
+        subscriberNameAr:
+          type: string
+        subscriberNameEn:
+          type: string
+        renewalId:
+          type: integer
+        amount:
+          type: number
+        paidAmount:
+          type: number
+        remainingAmount:
+          type: number
+        status:
+          type: string
+          enum: [unpaid, partial, paid]
+        dueDate:
+          type: string
+          format: date
+        notes:
+          type: string
+        payments:
+          type: array
+          items:
+            $ref: "#/components/schemas/DebtPayment"
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - subscriberId
+        - amount
+        - paidAmount
+        - remainingAmount
+        - status
+
+    DebtListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Debt"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+        totalDebt:
+          type: number
+        totalPaid:
+          type: number
+        totalRemaining:
+          type: number
+      required:
+        - data
+        - total
+        - page
+        - limit
+        - totalPages
+        - totalDebt
+        - totalPaid
+        - totalRemaining
+
+    DebtPayment:
+      type: object
+      properties:
+        id:
+          type: integer
+        debtId:
+          type: integer
+        userId:
+          type: integer
+        userName:
+          type: string
+        amount:
+          type: number
+        paymentMethod:
+          type: string
+          enum: [cash, vodafone_cash, bank_transfer]
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - debtId
+        - amount
+        - paymentMethod
+
+    PayDebtRequest:
+      type: object
+      properties:
+        amount:
+          type: number
+        paymentMethod:
+          type: string
+          enum: [cash, vodafone_cash, bank_transfer]
+        notes:
+          type: string
+      required:
+        - amount
+        - paymentMethod
+
+    FinancialEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        referenceType:
+          type: string
+        referenceId:
+          type: integer
+        subscriberId:
+          type: integer
+        subscriberNameAr:
+          type: string
+        userId:
+          type: integer
+        userName:
+          type: string
+        type:
+          type: string
+        direction:
+          type: string
+          enum: [debit, credit]
+        amount:
+          type: number
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - type
+        - direction
+        - amount
+
+    FinancialEntryListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/FinancialEntry"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+        totalDebit:
+          type: number
+        totalCredit:
+          type: number
+      required:
+        - data
+        - total
+        - page
+        - limit
+        - totalPages
+        - totalDebit
+        - totalCredit
+
+    PriceTier:
+      type: object
+      properties:
+        id:
+          type: integer
+        minQuantity:
+          type: number
+        maxQuantity:
+          type: number
+        pricePerGb:
+          type: number
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - minQuantity
+        - maxQuantity
+        - pricePerGb
+        - isActive
+
+    CreatePriceTierRequest:
+      type: object
+      properties:
+        minQuantity:
+          type: number
+        maxQuantity:
+          type: number
+        pricePerGb:
+          type: number
+        isActive:
+          type: boolean
+      required:
+        - minQuantity
+        - maxQuantity
+        - pricePerGb
+
+    PricingCalculation:
+      type: object
+      properties:
+        amount:
+          type: number
+        gigabytes:
+          type: number
+        pricePerGb:
+          type: number
+        tier:
+          $ref: "#/components/schemas/PriceTier"
+      required:
+        - amount
+        - gigabytes
+        - pricePerGb
+
+    Setting:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+      required:
+        - key
+        - value
